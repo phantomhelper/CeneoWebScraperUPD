@@ -21,18 +21,21 @@ def index():
         f.close()
     return render_template('index.html', text=text, requirements=requirements)
 
-@app.route('/extract', methods=['POST', 'GET'])
+@app.route('/extract', methods=['GET', 'POST'])
 def extract():
     if request.method == 'GET':
         return render_template('extract.html')
     if request.method == 'POST':
         try:
             id = request.form['id']
-            if id == "" or int(id)<=0:
+            if type(id) == str and int(id)>=1:
+                scraper(id)
+                return render_template('extract.html', success=1)
+            else:
                 return render_template('extract.html', data="Please enter valid id", success=0)
-            return render_template('extract.html', success=1)
         except Exception as e:
             data = "Something went wrong. Please check the ID and try again."
+            print(e)
             return render_template('extract.html', data=data, success=0)
 
     
@@ -41,8 +44,18 @@ def products():
     filenames = []
     for filename in os.listdir("./opinions/"):
             if filename.endswith(".json"):
-                filenames.append(analyze(filename.split(".")[0]))
-                filenames.append(filename)
+                try:
+                    filenames.append(analyze(filename.split(".")[0]))
+                    filenames.append(filename)
+                except:
+                    data = {
+                'id': filename.split(".")[0],
+                'n': 0,
+                'p': 0,
+                'c': 0,
+                'a': 0
+                    }
+                    filenames.append(data)
     return render_template('products.html', filenames=filenames)
 
 @app.route('/author')
